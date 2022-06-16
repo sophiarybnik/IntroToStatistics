@@ -1,0 +1,716 @@
+---
+title: "Assignment 2"
+author: "Sophia Rybnik"
+date: "14/04/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, comment = NA)
+```
+
+
+
+```{r}
+require(ggplot2)
+require(reshape)
+require(MASS)
+require(data.table)
+
+```
+# Questions
+
+## Q1)
+### a. 
+```{r}
+df_Q1<- read.csv("C:\\Users\\Sophia\\Desktop\\MTH404\\Assignment 2\\A2-Q1.csv", header = TRUE, stringsAsFactors = FALSE)
+mle <- fitdistr(df_Q1$x,densfun="gamma")
+```
+
+The Maximum likelihood estimation is a method that find the values of $\hat{\alpha}$ and $\hat{\beta}$that result in the curve that best fits the data. These estimators are given by the 'fitdistr' function in R. With $\hat{\alpha}\approx4.8623$ and $\hat{\beta}\approx0.098910$, we are most likely to observe the given sample. 
+
+Recall that the standard error of an estimate of a parameter is the standard deviation of its sampling distribution, i.e. how accurate the estimator is in comparison with the population parameter. In this case, $SE(\hat{\alpha})\approx0.21035$ and $SE(\hat{\beta})\approx0.0045075$. 
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c | c |}
+\hline
+Shape & Rate \\
+\hline
+4.862254857 & 0.098909597 \\
+(0.210345254)& (0.004507526)\\
+\hline
+\end{tabular}
+\end{table}
+
+
+### b.
+
+As n = 100, the CLT can be applied. Given that $\alpha = 0.05\Leftrightarrow1-\frac{\alpha}{2}=0.975$
+
+The 95% confidence interval for the parameters is built as follows:
+$$\begin{aligned} 
+\hat{\theta}\pm Z_{1-\frac{\alpha}{2}}S.E(\hat{\theta})
+\end{aligned}$$
+
+
+95% confidence interval for $\alpha$:
+$$\begin{aligned} 
+4.862254857\pm(1.96)(0.210345254)\Leftrightarrow(4.4450,5.2745)
+\end{aligned}$$
+
+
+95% confidence interval for $\beta$:
+$$\begin{aligned} 
+0.098909597\pm(1.96)(0.004507526)\Leftrightarrow(0.090075,0.10774)
+\end{aligned}$$
+
+```{r}
+lowerbound_alpha <-  4.862254857-qnorm(0.975)*0.210345254
+upperbound_alpha <- 4.862254857+qnorm(0.975)*0.210345254
+
+lowerbound_beta <- 0.098909597-qnorm(0.975)*0.004507526
+upperbound_beta <- 0.098909597+qnorm(0.975)*0.004507526
+
+```
+We can conclude from the given sample that 95% of the time, the population distribution shape will be between 4.4450 and 5.2745. Moreover, 95% of the time, the population distribution rate will be between 0.090075 and 0.10774. 
+
+### c.
+The Fisher Information Matrix for the Normal Distribution is derived as follows:
+The parameters of the Gamma distribution, $\beta$ and $\alpha$, can be estimated by the Method of Moments as follows:
+
+1) Moment Generating Function of the Gamma distribution:
+Recall that the MGF of a distribution is given by:
+$$\begin{aligned} 
+M_X(t)&= E(e^{tx})\\
+&=\int_0^\infty e^{tx}f(x)dx\\
+\end{aligned}$$
+Take $t<\beta$. It can be proven that the MGF of the Gamma distribution is not defined for $t\geq\beta$.
+
+$$\begin{aligned} 
+M_X(t)&= \frac{\beta^\alpha}{\Gamma(\alpha)}\int_0^{\infty}x^{\alpha-1}e^{-(\beta-t) x}dx \hspace{2cm}let \hspace{0.1cm}u=(\beta-t)x\Leftrightarrow du = (\beta - t)dx\\
+&=\frac{\beta^\alpha}{\Gamma(\alpha)}\int_0^{\infty}\left(\frac{u}{\beta-t}\right)^{\alpha-1}e^{-u}\frac{du}{\beta-t}\\
+&=\frac{\beta^\alpha}{\Gamma(\alpha)(\beta-t)^\alpha}\int_0^{\infty}u^{\alpha-1}e^{-u}du\hspace{2cm} Note: \Gamma(z)=\int_0^{\infty}x^{z-1}e^{-x}dx \\
+\Leftrightarrow M_X(t)&=\frac{\Gamma(\alpha)\beta^\alpha}{\Gamma(\alpha)(\beta-t)^\alpha}\\
+&=\left(\frac{\beta}{\beta-t}\right)^\alpha\\
+&=\left(1-\frac{t}{\beta}\right)^{-\alpha}
+\end{aligned}$$
+
+
+2) First and Second Moments of the MGF:
+$$\begin{aligned} 
+M'_X(t)&= -\alpha\left(1-\frac{t}{\beta}\right)^{-\alpha-1}\left(\frac{-1}{\beta}\right)\\
+&=\frac{\alpha}{\beta}\left(\frac{\beta-t}{\beta}\right)^{-\alpha-1}\\
+&=\frac{\alpha\beta^\alpha}{\left(\beta-t\right)^{\alpha+1}}\\\\
+M'_X(0)&=E[X]=\frac{\alpha}{\beta}\\\\
+M''_X(t)&=\alpha\beta^\alpha(-\alpha-1)(\beta-t)^{-\alpha-2}(-1)\\
+&=\frac{\alpha\beta^\alpha(\alpha+1)}{(\beta-t)^{\alpha+2}}\\\\
+M''_X(0)&=\frac{\alpha(\alpha+1)}{\beta^2}
+\end{aligned}$$
+
+3) Estimation of the Parameters:
+$$\begin{aligned} 
+E[X]&=\bar{X}\\
+&\Leftrightarrow\bar{X}=\frac{1}{n}\sum_{i=1}^nx_i\\
+&\Leftrightarrow\frac{1}{n}\sum_{i=1}^nx_i=\frac{\alpha}{\beta}\\\\
+E[X^2]&=\frac{1}{n}\sum_{i=1}^nx^2_i\\
+&\Leftrightarrow\frac{1}{n}\sum_{i=1}^nx^2_i=\frac{\alpha(\alpha+1)}{\beta^2}\\
+&\Leftrightarrow\alpha=\beta\bar{X}\\\\\\
+Then, \hspace{0.5cm}\frac{1}{n}\sum_{i=1}^nx^2_i&=\frac{\beta\bar{X}(\beta\bar{X}+1)}{\beta^2}\\
+&\Leftrightarrow\beta(\bar{X^2}-\frac{1}{n}\sum_{i=1}^nx^2_i)=-\bar{X}\\
+&\Leftrightarrow\beta = \frac{\bar{X}}{\frac{1}{n}\sum_{i=1}^nx^2_i-\bar{X}}\\\\
+Hence, \hspace{0.5cm}\alpha=\beta\bar{X}&\Leftrightarrow\alpha= \frac{\bar{X^2}}{\frac{1}{n}\sum_{i=1}^nx^2_i-\bar{X}}\\\\\\
+\end{aligned}$$
+
+$$\therefore\hat{\beta} = \frac{\bar{X}}{\hat{\sigma^2}}, \hspace{0.2cm}\hat{\alpha}= \frac{\bar{X^2}}{\hat{\sigma^2}}$$
+
+Now, using the above derived estimators of the two parameters, the corresponding estimates based on the sample data are $\hat{\alpha}\approx4.7269$ and $\hat{\beta}\approx0.09616$. From part a) it is clear that the estimate is very close to the values given by the Maximum-likelihood fitting function in R. 
+
+
+```{r}
+alpha_shape = (mean(df_Q1$x))^2/var(df_Q1$x)
+beta_rate = mean(df_Q1$x)/var(df_Q1$x)
+```
+
+
+## Q2)
+Let $X = (X_1, X_2,...,X_n)$ be a normally distributed random sample with $E(X_k) = \mu$ and $Var(X_k) = \sigma^2$. $X\sim f(x|\theta)$, with $\theta=(\mu,\sigma^2)$. 
+
+Recall that the PDF of the normal distribution is given by $f_x(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{\frac{-1}{2}\frac{(x-\mu)}{\sigma^2}^2}$.
+
+The Fisher Information Matrix for the Normal Distribution is derived as follows:
+
+1) Maximum Likelihood Function:
+$$\begin{aligned} 
+L(\mu,\sigma^2,x)&=\Pi_{k=1}^n\frac{1}{\sigma\sqrt{2\pi}}e^{\frac{-1}{2}\frac{(x-\mu)}{\sigma^2}^2}\\
+&=(2\pi\sigma^2)^\frac{-n}{2}e^{-\frac{1}{2\sigma^2}\sum_{k=1}^n({x_k-\mu})^2}
+\end{aligned}$$
+
+2) Log Likelihood Function:
+$$l(\mu,\sigma^2,x)=\frac{-n}{2}ln(2\pi)-\frac{n}{2}ln(\sigma^2)-\frac{1}{2\sigma^2}\sum_{k=1}^n(x_k-\mu)^2$$
+3)  For a multi-parameter distribution, $\theta=(\theta_1,\theta_2,...,\theta_k)^T$.
+
+The 1st order derivative of the Log Likelihood function with respect to $\theta$ is a k dimensional vector: 
+
+$\frac{\partial l(\theta,x)}{\partial\theta}=\left(\frac{\partial l(\theta)}{\partial\theta_1},...\frac{\partial l(\theta)}{\partial\theta_k}\right)^T$
+
+The 2nd order derivative of the Log Likelihood function with respect to $\theta$ is a $k\cdot k$ matrix: 
+
+$\frac{\partial^2 l(\theta,x)}{\partial\theta^2}=\left[\frac{\partial^2 l(\theta)}{\partial\theta_i\partial\theta_j}\right]_{i=1,..,k;j=1,...,k}$
+
+For the Normal distribution, $\theta=(\mu,\sigma^2)^T$, $\frac{\partial l(\theta,x)}{\partial\theta}$ is a 2x1 vector, and $\frac{\partial^2 l(\theta,x)}{\partial\theta^2}$ is a 2x2 matrix.
+
+The Fisher Information Matrix for a multi-parameter distribution is defined as:
+$$\begin{aligned}
+I(\theta)&=E\left[\frac{\partial l(\theta)}{\partial\theta}\left(\frac{\partial l(\theta)}{\partial\theta}\right)^T\right]\\
+&=cov\left(\frac{\partial l(\theta)}{\partial\theta}\right)\\
+&=-E\left(\frac{\partial^2 l(\theta)}{\partial\theta^2}\right) 
+\end{aligned}$$
+
+4) The 1st and 2nd derivatives with respect to $\mu$ and $\sigma$ can be found. 
+
+1st and 2nd Derivatives with respect to $\mu$:
+$$\begin{aligned} 
+\frac{\partial l(\mu,\sigma^2,x)}{\partial\mu}&=\sum_{k=1}^n\frac{x_k-\mu}{\sigma^2}\\
+&=\sum_{k=1}^n\left(\frac{x_k}{\sigma^2}-\frac{\mu}{\sigma^2}\right)\\
+\frac{\partial^2l(\mu,\sigma^2,x)}{\partial\mu^2}&=\frac{-n}{\sigma^2}
+\end{aligned}$$
+
+1st and 2nd Derivatives with respect to $\sigma$:
+
+For simplicity, let $\tau=\sigma^2$. Then, $l(\mu,\tau,x)=\frac{-n}{2}ln(2\pi)-\frac{n}{2}ln(\tau)-\frac{1}{2\tau}\sum_{k=1}^n(x_k-\mu)^2$.
+
+$$\begin{aligned}
+\frac{\partial l(\mu,\tau,x)}{\partial\tau}&=\frac{-n}{2\tau}+\frac{1}{2\tau^2}\sum_{k=1}^n{(x_k-\mu)^2}\\
+\frac{\partial^2 l(\mu,\tau,x)}{\partial\tau^2}&=\frac{n}{2\tau^2}-\frac{1}{\tau^3}\sum_{k=1}^n{(x_k-\mu)^2}\\
+\end{aligned}$$
+
+Mixed 2nd Partial Derivatives:
+$$\begin{aligned} 
+\frac{d^2l(\theta)}{d\mu\tau}&=\frac{\partial l}{\partial\mu}\left[\frac{\partial l}{\partial \tau}\right]\\
+&=\frac{\partial l}{\partial\mu}\left[\frac{-n}{2\tau}+\frac{1}{2\tau^2}\sum_{k=1}^n{(x_k-\mu)^2}\right]\\
+&=\frac{-1}{\tau^2}\sum_{k=1}^n{(x_k-\mu)}\\\\
+\frac{d^2l(\theta)}{d\tau\mu}&=\frac{\partial l}{\partial\tau}\left[\frac{\partial l}{\partial \mu}\right]\\
+&=\frac{\partial l}{\partial\tau}\left[\sum_{k=1}^n\frac{x_k-\mu}{\tau}\right]\\
+&=\frac{-1}{\tau^2}\sum_{k=1}^n{(x_k-\mu)}
+\end{aligned}$$
+
+5) The components of the Fisher Information Matrix can be combined as follows:
+$$\begin{aligned}
+I(\theta)&=-E\left[\frac{\partial^2l(\theta)}{\partial\theta^2}\right]\\
+&=-E\begin{split}
+\begin{bmatrix}
+   \frac{\partial^2 l(\theta)}{\partial\mu^2} & \frac{\partial^2 l(\theta)}{\partial\mu\partial\tau} \\
+   \frac{\partial^2 l(\theta)}{\partial\tau\partial\mu} & \frac{\partial^2 l(\theta)}{\partial\tau^2} \\
+\end{bmatrix}
+\end{split}\\
+&=-E\begin{bmatrix}
+   \frac{-n}{\tau} & \frac{-1}{\tau^2}\sum_{k=1}^n{(x_k-\mu)} \\
+   \frac{-1}{\tau^2}\sum_{k=1}^n{(x_k-\mu)} & \frac{n}{2\tau^2}-\frac{1}{\tau^3}\sum_{k=1}^n{(x_k-\mu)^2}\\
+\end{bmatrix}
+\end{aligned}$$
+
+Note that:
+
+i) The expectation of the sum of the deviations from the mean is zero, i.e. $E\left[\sum_{k=1}^n{(x_k-\mu)}\right]=0$
+
+ii) The expected value of $\sum_{k=1}^n{(x_k-\mu)^2}$ is $n\tau$.  
+
+$$\begin{aligned}
+E\left[\frac{n}{2\tau^2}-\frac{1}{\tau^3}\sum_{k=1}^n{(x_k-\mu)^2}\right]&=\frac{n}{2\tau^2}-\frac{n}{\tau^2}\\
+&=\frac{-n}{2\tau^2}
+\end{aligned}$$
+
+
+Finally, subbing back $\sigma^2$ for $\tau$, the information matrix of the Normal distribution is:
+$$\begin{aligned}
+I(\theta)&=\begin{bmatrix}
+\frac{n}{\sigma^2} & 0 \\
+   0 & \frac{n}{2\sigma^4}\\
+\end{bmatrix}
+\end{aligned}$$
+
+## Q3)
+$H_0: p_1=p_2$
+$H_1:p_1>p_2$
+
+The hypotheses constitute a one-tailed test for the difference of sample proportions. The null hypothesis will be rejected if the proportion of acceptable electronic components of the foreign supplier ($p_1$) is significantly greater than the proportion of that of the domestic supplied ($p_2$). 
+
+Note that $n_1+n_2=80+100 = 180$ and $(n_1+n_2)p_1=(100+80)0.9=162$. Hence, $n_1+n_2>30$ and $(n_1+n_2)p_1>5$
+
+Since the null hypothesis states that $p_1=p_2$, then then the pooled sample proportion is an estimator of the common population proportion:
+$$\begin{aligned} 
+\hat{p} &= \frac{\hat{p}_1*n_1+\hat{p}_2*n_2}{n_1+n_2}\\ 
+&=\frac{(0.9)(100)+(0.7)(80)}{100+80}\\
+&\approx0.8111
+\end{aligned}$$
+
+The test statistic is the z-score:
+$$\begin{aligned}
+Z_{p,2} &= \frac{\hat{p_1}-\hat{p_2}}{\sqrt{\frac{\hat{p}(1-\hat{p})}{n_1}+\frac{\hat{p}(1-\hat{p})}{n_2}}}\\
+&=\frac{0.9-0.7}{\sqrt{\frac{0.8111(1-0.8111)}{100}+\frac{0.8111(1-0.8111)}{80}}}\\
+&\approx3.406
+\end{aligned}$$
+
+```{r}
+z_score_Q3 = (0.9-0.7)/sqrt(((0.8111*(1-0.8111))/100)+((0.8111*(1-0.8111))/80))
+p_value_Q3 = 1-pnorm(3.406)
+```
+For the given problem, the rejection region is $Z_2>Z_{1-\alpha}$, where $\alpha = 0.05\Leftrightarrow 1-\alpha=0.95$. 
+Given that $Z_{0.95}=1.645$, $3.406>1.645$, hence the sample falls into the rejection region, and $H_0$ is rejected. It can be concluded that $p_1$ is statistically greater than $p_2$. Thus, the foreign supplier has a greater proportion of acceptable electronic components than the domestic supplier.
+
+## Q4)
+### a. 
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c | c | c | c |}
+\hline
+A & B & C & D \\
+\hline
+33 & 32 & 31 & 29\\
+38 & 40 & 37 & 34\\
+36 & 42 & 35 & 32\\
+40 & 38 & 33 & 30\\
+31 & 30 & 34 & 33\\
+35 & 34 & 30 & 31\\
+\hline
+\end{tabular}
+\end{table}
+
+```{r}
+#Encoding the given data as vectors
+a <- c(33,38,36,40,31,35)
+b<- c(32,40,42,38,30,34)
+c<- c(31,37,35,33,34,30)
+d<- c(29,34,32,30,33,31)
+treads <- c(a,b,c,d)
+groups <- c(rep("A", 6), rep("B", 6), rep("C", 6), rep("D", 6))
+
+#Create a tidy-data data frame
+df_Q4 <- data.frame("Group"= groups, "Treads" = treads)
+
+#ANOVA Table
+ANOVA_model <- anova(lm(treads~groups, df_Q4))
+```
+The given data was transformed into a dataframe, and inputted into the R ANOVA command. The table has been summarized below:
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c | c | c | c | c |}
+\hline
+Source of Variation & SS & df & Mean Squares & F-test \\
+\hline
+Treatments & 77.50 & 3 & 25.833 & 2.3883 \\
+\hline
+Error & 216.33 & 20 & 10.817 & \\
+\hline
+Total & 293.83 & 23 & &\\
+\hline
+\end{tabular}
+\end{table}
+
+### b.
+To make a conclusion based on the 4 programs, the test hypotheses are set up as follows:
+
+$H_0:\mu_1=\mu_2=\mu_3=\mu_4$
+
+$H_1:$ At least one $\mu_i$ is different, i = 1, 2, 3, or 4
+
+
+Recall that $F = \frac{MST}{MSE}\sim F(k-1,n-k)$. Given that $\alpha=0.05$,$k=4$, and  $n=24$, the null hypothesis can be rejected if $F > F_{0.95}(4,20)$ or $p-value<0.05$.
+
+At a significance level of 5%, $F = 2.3883 \ngtr F_{0.95}= 3.0984$. Alternatively, $p-value\approx0.085282\nless0.05$.
+
+As shown, both methods fail to reject the null hypothesis. Therefore, it cannot be concluded whether there are or are not significant differences between the effectiveness of the programs. 
+
+
+```{r}
+Fscore_Q3 <- qf(0.95, df1 = 3, df2 = 20)
+p_value_Q3 <- 1-pf(2.3883,4,20)
+```
+
+### c.
+
+```{r}
+mean_b <- mean(b)
+var_b <- var(b)
+mean_c <- mean(c)
+var_c <- var(c)
+
+t_value <- qt(0.975, df = 20)
+
+lower_bound <- (mean(b)-mean(c)-t_value*sqrt(10.817*1/3))
+upper_bound <- (mean(b)-mean(c)+t_value*sqrt(10.817*1/3))
+```
+Note that $n_b = n_c = 6$. Since the sample size is small, the difference of means follows a t-student distribution. Under the assumption of normality, independence of samples B and C, and equal population variances, the confidence interval for the difference of means is built as follows:
+
+$$(\bar{X_b}-\bar{X_c})\pm t_{1-\frac{\alpha}{2}}(n-k)S\sqrt{\frac{1}{n_b}+\frac{1}{n_c}}$$
+where $S = \sqrt{MSE} = \sqrt{10.817}$ from the ANOVA table. 
+
+Since $1-\alpha=0.95,\\\Leftrightarrow\alpha=0.05\\\Leftrightarrow1-\frac{\alpha}{2}=0.975\\$
+
+
+Then, the 95% confidence interval is given by:
+$$\begin{aligned}
+&(36-33.333)\pm t_{0.975}(20)\sqrt{10.817\left(\frac{1}{6}+\frac{1}{6}\right)}\\
+&\approx2.6667\pm3.9610
+\end{aligned}$$
+
+Therefore, the 95% confidence interval for the difference of means of the programs B and C is $(-1.2943,6.6276)$.
+
+Since the confidence interval is a range of likely values for the difference in means, if it contains zero then no difference between the sample means is a likely possibility. Based on this interval, we conclude that there is no statistically significant difference in the mean number of treads between the programs because the the 95% confidence interval includes the null value, zero. 
+
+
+## Q5)
+### a.
+```{r, figures-side, fig.show="hold", out.width="50%"}
+df_Q5<- read.csv("C:\\Users\\Sophia\\Desktop\\MTH404\\Assignment 2\\A2-Q5.csv", header = TRUE, stringsAsFactors = FALSE)
+df_Q5$Date <- as.Date(df_Q5$Date,"%Y-%m-%d")
+sp_vs_oil <- ggplot(df_Q5, aes(s.p500, nyse.oil))+geom_point()
+sp_vs_oil + labs(title = "Oil Price vs S&P 500 Index from January 1997 to October 2006 ", x = "Oil Price", y = "S&P 500 Index")
+nasdaq_vs_oil <- ggplot(df_Q5, aes(Nasdaq, nyse.oil))+geom_point()
+nasdaq_vs_oil + labs(title = "Oil Price vs Nasdaq Index from January 1997 to October 2006 ", x = "Oil Price", y = "Nasdaq Index")
+```
+
+```{r}
+
+#Subsetting the dataframe to see on which dates the oil price < $40
+df_under40 <- subset(df_Q5, select = c(1,2))
+df_under40 <- df_under40[df_under40$nyse.oil<40,]
+
+#Converting the date to just year to analyze in which years the price was frequently less than $40
+df_under40$Date <- as.numeric(format(df_under40$Date, "%Y"))
+
+#plot_under40 <- ggplot(df_under40, aes(x = Date)) + geom_bar(fill = "steelblue")
+#plot_under40 + labs(xlab = "Year", title = "Total Number of of times that Oil Price<$40 from 1997 to 2006") + scale_x_continuous(breaks =seq(1997,2004, by = 1))
+
+```
+
+
+### b.
+```{r}
+n <- nrow(df_Q5)
+df_Q5$TS_nyse <- c(((df_Q5[2:n,2] - df_Q5[1:(n-1), 2])/df_Q5[1:(n-1), 2]),NA) #N/A added as the last entry in the "Change" column
+
+df_Q5$TS_SP <- c(((df_Q5[2:n,3] - df_Q5[1:(n-1), 3])/df_Q5[1:(n-1), 3]),NA) #N/A added as the last entry in the "Change" column
+
+df_Q5$TS_Nasdaq <- c(((df_Q5[2:n,4] - df_Q5[1:(n-1), 4])/df_Q5[1:(n-1), 4]),NA) #N/A added as the last entry in the "Change" column
+
+df_returns <- df_Q5[1:n,c(1,5:7)]
+df_returns = setDT(df_returns)
+df_long <- melt(data = df_returns, 
+                id.vars = "Date",
+                variable.name = "Variable",
+                value.name = "Return")
+
+
+ts_returns <- ggplot(df_long, aes(x = Date, y = Return)) + geom_line(color = "steelblue") + facet_grid(rows = vars(Variable))
+ts_returns + labs( xlab("Date"), ylab("Return (%)"), title = "Time Series of Returns")
+```
+
+### c.
+A simple linear regression model is given as $Y_i=\alpha+\beta X_i+\epsilon_i,\hspace{0.2cm}i=1,2,...,n$. 
+
+The estimators of $\alpha$ and $\beta$, $\hat{\alpha}$ and $\hat{\beta}$ respectively, are the least square estimators if they minimize the sum of the squares of the difference between the dependent values of the data and the model, i.e.
+
+$$\begin{aligned}
+SSE(\hat{\alpha},\hat{\beta})&=min_{\alpha,\beta}\sum_{i=1}^n(Y_i-\hat{Y_i})^2\\
+&=min_{\alpha,\beta}\sum_{i=1}^n(Y_i-(\alpha+\beta X_i))^2
+\end{aligned}$$
+
+After differentiating the SSE with respect to the parameters and setting them equal to zero, we can define the least square estimators as follows:
+$$\begin{aligned}
+\hat{\beta}&=\frac{S_{xy}}{S_{xx}}\\
+\hat{\alpha}&=\bar{Y}-\beta\bar{X}
+\end{aligned}$$
+
+Linear regression model for Oil Returns vs Nasdaq Returns:
+
+Using the data from part b), using R we can find:
+$$\begin{aligned}
+n &= 2442\\
+\sum X_i&\approx0.97290\\
+\sum X_i^2&\approx0.83342\\
+\sum Y_i&\approx1.50871\\
+\sum Y_i^2&\approx1.3674\\
+\sum X_iY_i&\approx0.018310\\
+\end{aligned}$$
+
+```{r}
+n_returns <- nrow(df_returns)-1
+Nas_X_i <- sum(df_returns$TS_Nasdaq[1:n_returns])
+Y_i <- sum(df_returns$TS_nyse[1:n_returns])
+Y_i_squared <- sum(df_returns$TS_nyse[1:n_returns]^2)
+Nas_X_i_squared <- sum(df_returns$TS_Nasdaq[1:n_returns]^2)
+Nas_X_i_Y_i <- sum(df_returns$TS_Nasdaq[1:n_returns]*df_returns$TS_nyse[1:n_returns])
+```
+
+Then, it follows that:
+$$\begin{aligned}
+S_{xy}&=\sum_{i=1}^n(X_i-\bar{X})(Y_i-\bar{Y})\\
+&=\sum_{i=1}^nX_iY_i-\frac{(\sum_{i=1}^nX_i)(\sum_{i=1}^nY_i)}{n}\\
+\Leftrightarrow S_{xy}&\approx0.017709\\\\
+S_{xx}&=\sum_{i=1}^n(X_i-\bar{X})^2\\
+&=\sum_{i=1}^nX_i^2-\frac{(\sum_{i=1}^nX_i)^2}{n}\\
+\Leftrightarrow S_{xx}&\approx0.83303\\\\
+S_{yy}&=\sum_{i=1}^n(Y_i-\bar{Y})^2\\
+&=\sum_{i=1}^nY_i^2-\frac{(\sum_{i=1}^nY_i)^2}{n}\\
+\Leftrightarrow S_{yy}&\approx1.3665
+\end{aligned}$$
+
+```{r}
+Nas_S_xy <- Nas_X_i_Y_i-(Nas_X_i*Y_i)/n_returns
+Nas_S_xx <- Nas_X_i_squared-(Nas_X_i)^2/n_returns
+S_yy <- Y_i_squared-(Y_i)^2/n_returns
+
+Nas_beta_hat <- Nas_S_xy/Nas_S_xx
+Nas_alpha_hat <- mean(df_Q5$TS_nyse[1:n_returns])-Nas_beta_hat*mean(df_Q5$TS_Nasdaq[1:n_returns])
+
+#check
+Nas_linear_regression <- lm(df_Q5$TS_nyse~df_Q5$TS_Nasdaq, data = df_Q5)
+
+```
+
+Then, $\hat{\beta}\approx0.021258$ and $\hat{\alpha}\approx0.00060934$. Thus, the estimated regression line is $\hat{y}=0.00060934+0.021258x$.
+
+
+Linear regression model for Oil Returns vs S&P 500 Returns:
+
+Using the data from part b), using R we can find:
+$$\begin{aligned}
+n &= 2442\\
+\sum X_i&\approx0.74754\\
+\sum X_i^2&\approx0.33014\\
+\sum Y_i&\approx1.50871\\
+\sum Y_i^2&\approx1.3674\\
+\sum X_iY_i&\approx0.015417\\
+\end{aligned}$$
+
+```{r}
+n_returns <- nrow(df_returns)-1
+SP_X_i <- sum(df_returns$TS_SP[1:n_returns])
+Y_i <- sum(df_returns$TS_nyse[1:n_returns])
+Y_i_squared <- sum(df_returns$TS_nyse[1:n_returns]^2)
+SP_X_i_squared <- sum(df_returns$TS_SP[1:n_returns]^2)
+SP_X_i_Y_i <- sum(df_returns$TS_SP[1:n_returns]*df_returns$TS_nyse[1:n_returns])
+```
+
+Then, it follows that:
+$$\begin{aligned}
+S_{xy}&=\sum_{i=1}^n(X_i-\bar{X})(Y_i-\bar{Y})\\
+&=\sum_{i=1}^nX_iY_i-\frac{(\sum_{i=1}^nX_i)(\sum_{i=1}^nY_i)}{n}\\
+\Leftrightarrow S_{xy}&\approx0.014955\\\\
+S_{xx}&=\sum_{i=1}^n(X_i-\bar{X})^2\\
+&=\sum_{i=1}^nX_i^2-\frac{(\sum_{i=1}^nX_i)^2}{n}\\
+\Leftrightarrow S_{xx}&\approx0.32991\\\\
+S_{yy}&=\sum_{i=1}^n(Y_i-\bar{Y})^2\\
+&=\sum_{i=1}^nY_i^2-\frac{(\sum_{i=1}^nY_i)^2}{n}\\
+\Leftrightarrow S_{yy}&\approx1.3665
+\end{aligned}$$
+
+```{r}
+SP_S_xy <- SP_X_i_Y_i-(SP_X_i*Y_i)/n_returns
+SP_S_xx <- SP_X_i_squared-(SP_X_i)^2/n_returns
+
+SP_beta_hat <- SP_S_xy/SP_S_xx
+SP_alpha_hat <- mean(df_Q5$TS_nyse[1:n_returns])-SP_beta_hat*mean(df_Q5$TS_SP[1:n_returns])
+
+#check
+SP_linear_regression <- lm(df_Q5$TS_nyse~df_Q5$TS_SP, data = df_Q5)
+
+```
+
+Then, $\hat{\beta}\approx0.045330$ and $\hat{\alpha}\approx0.00060394$. Thus, the estimated regression line is $\hat{y}=0.00060394+0.045330x$.
+
+
+The interpretation of the value of beta is the change in the dependent variable when the independent variable experiences a one-unit change. In this case, the value of the beta means that for each 1% return observed from the S&P 500, we can expect to see a 0.045330% return in oil over the mean return in oil. 
+
+
+
+### d.
+The Analysis of Variance can be done using the conclusions of the least square estimator method from above. 
+
+The total Sum of Squares is: 
+$Total SS=\sum_{i=1}^n(Y_i-\bar{Y})^2 \Leftrightarrow TotalSS=S_{yy}$
+
+Then, the Sum of Squares for regression:
+$$\begin{aligned}
+SSR&=\sum_{i=1}^n(\hat{Y}_i-\bar{Y})^2\\
+&=\sum_{i=1}^n(\alpha+\beta Xi-\bar{Y})^2\\
+&=\sum_{i=1}^n(\bar{Y}-\beta\bar{X}+\beta Xi-\bar{Y})^2\\
+&=\beta^2\sum_{i=1}^n(X_i-\bar{X})^2\\
+&=\left(\frac{S_{xy}}{S_{xx}}\right)^2S_{xx}\\
+\Leftrightarrow SSR&=\frac{(S_{xy})^2}{S_{xx}}\\\\
+\end{aligned}$$
+
+Combining the above, the Sum of Squares for Error is given by $SSE=TotalSS-SSR=S_{yy}-\frac{(S_{xy})^2}{S_{xx}}$.
+
+The ANOVA table for the linear regression model with Nasdaq returns as independent variable:
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c | c | c | c | c |}
+\hline
+Source of Variation & SS & df & Mean Squares & F-test \\
+\hline
+Regression & 0.00037646 & 1 & 0.00037646 & 0.67239\\
+\hline
+Error & 1.3661 & 2440 & 0.00055988 & \\
+\hline
+Total & 1.366481 & 2441 & &\\
+\hline
+\end{tabular}
+\end{table}\
+
+```{r}
+Nas_SSR <- (Nas_S_xy^2)/Nas_S_xx
+Nas_SSE <- S_yy-Nas_SSR
+Nas_MSE <- Nas_SSE/(n_returns-2)
+Nas_F <- Nas_SSR/Nas_MSE
+Nas_TSS <- Nas_SSE+Nas_SSR
+
+```
+
+The ANOVA table for the linear regression model with S&P returns as independent variable:
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c | c | c | c | c |}
+\hline
+Source of Variation & SS & df & Mean Squares & F-test \\
+\hline
+Regression & 0.00067790 & 1 & 0.00067790 & 1.2111\\
+\hline
+Error & 1.3658 & 2440 & 0.00055976 & \\
+\hline
+Total & 1.3665 & 2441 & &\\
+\hline
+\end{tabular}
+\end{table}\
+
+```{r}
+SP_SSR <- (SP_S_xy^2)/SP_S_xx
+SP_SSE <- S_yy-SP_SSR
+SP_MSE <- SP_SSE/(n_returns-2)
+SP_F <- SP_SSR/SP_MSE
+SP_TSS <- SP_SSE+SP_SSR
+
+```
+To test whether S&P returns have an impact on Oil returns, we need to test about the validity of the model, i.e. whether $\beta$ is significantly different from zero. The hypotheses are set up as follows:
+
+$$H_0:\beta=\beta_0\hspace{1cm}H_1:\beta\neq\beta_0$$
+
+From the ANOVA table for regression we know that $F=1.2111$. The null hypothesis can be rejected if $F>F_{1-\alpha}(1,n-2)$. 
+
+Using R, $F=1.2111\ngtr F_{0.95}(1,2440)\approx3.8456$. Since the observed value of F does not fall into the rejection region, we fail to reject $H_0$. There is not enough evidence to conclude that the daily returns on the S&P index have an impact on daily oil returns. 
+
+```{r}
+f_test <- qf(0.95,1,n_returns-2)
+```
+
+
+### e. 
+The linear correlation coefficient for a collection of n pairs of coordinates in a sample is given as follows:
+$$r = \frac{S_{xy}}{\sqrt{S_{xx}\cdot S_{yy}}}$$
+
+Using the values found above, $r=\frac{0.014955}{\sqrt{1.3665\cdot0.32991}}\approx0.022273$.
+
+The positive value of r indicates that when daily returns on the S&P are positive, daily returns on oil prices also tend to be positive. Since |r| is much closer to 0 than it is to 1, the linear relationship between oil returns and S&P returns is not strong. This confirms our findings from part d). 
+```{r}
+SP_r <- SP_S_xy/sqrt(SP_S_xx*S_yy)
+```
+The hypothesis for a positive linear relationship between oil returns and S&P 500 returns, a test against zero correlation is set up as follows:
+
+$$H_0:\rho=0\hspace{1cm}H_1:\rho>0$$
+
+The test statistic is $t_r = r\sqrt{\frac{n-2}{1-r^2}}$, whose distribution under the null hypothesis is $t_r\sim t(n-2)$. Using the above calculated correlation coefficient, $r\approx0.022273$, we find that $t_r\approx1.1005$. The null hypothesis can be rejected if $t_r>t_{1-\alpha}(n-2)$.
+
+```{r}
+test_stat_correlation <- SP_r*sqrt((n_returns-2)/(1-SP_r^2))
+t <- qt(0.95,n_returns-2)
+```
+
+Using R, $t_r\approx1.1005\ngtr t_{0.95}(2440)\approx1.6455$. Since the observed value of t does not fall into the rejection region, we fail to reject $H_0$. There is not enough evidence to conclude that the daily returns on the S&P index and oil are linearly positively related.
+
+
+## Q6)
+### a.
+```{r, figures-side1, fig.show="hold", out.width="50%"}
+
+ggplot(df_Q5, aes(x=TS_nyse)) + geom_histogram(color = "#000000", fill = "steelblue") +labs(x="Daily Return", y= "Count", title = "Oil Futures Daily Returns")+scale_x_continuous(breaks = seq(-0.2, 0.2, by=0.05))
+
+qqnorm(df_Q5$TS_nyse)
+qqline(df_Q5$TS_nyse, col = "steel blue")
+```
+
+### b.
+The hypotheses for the chi-square goodness of fit test are set up as follows:
+$$H_0:X\sim N(\mu,\sigma^2) \hspace{1cm}H_1:X\not\sim N(\mu,\sigma^2)$$
+The decision rule to reject the null hypothesis is achieved by computing the test statistic, $\chi^2=\sum_{i=1}^k\frac{(O_i-E_i)^2}{E_i}$. If $\chi^2>\chi_{1-\alpha}^2(k-p-1)$, the null hypothesis may be rejected. 
+
+
+Using R, the intervals for data were set up as follows, in order to have at least 5 expected occurrences in each bin:
+
+```{r}
+set.seed(123)
+#Assign oil return data to a vector
+x <- df_Q5$TS_nyse[1:n_returns]
+
+#Simulated data in order to get an idea of how intervals should be set up in order to have 5 expected occurrences in each bin
+#Simulating data from a normal distribution with same sample size, mean and variance as oil returns
+y <- rnorm(n = n_returns, mean = mean(x), sd = sd(x))
+#Histogram used to inspect the bins (check frequency of expected observations in each interval). For the chi-square test, each expectation interval needs 5 or more observations
+#hist_y<- hist(y)
+#min(y)
+#max(y)
+
+
+#Set up new intervals to have at least 5 expected observations in each bin
+breaks <- c(-0.08,-0.06, -0.05, -0.04, -0.03, -0.02, -0.01,  0.00,  0.01,  0.02,  0.03,  0.04,  0.05,  0.06, 08)
+
+# bucketing values into bins
+grouped_x <- cut(x,breaks=breaks,include.lowest=TRUE,right=FALSE)
+grouped_y <- cut(y, breaks=breaks, include.lowest=TRUE,right=FALSE)
+ 
+
+#Inspect bins
+bin_check_x <- summary(grouped_x) #there are at least 5 observations in each bin
+bin_check_y <- summary(grouped_y)
+
+df_grouped_x <- as.data.frame(table(grouped_x))
+
+Oi <- df_grouped_x$Freq
+
+Ei = c()
+for (i in 1:length(breaks)-1)
+{
+  expected_for_interval <- length(x)*(pnorm(breaks[i+1], mean(x), sd(x))-pnorm(breaks[i], mean(x), sd(x)))
+  Ei <- append(Ei, expected_for_interval)
+  i = i+1
+}
+
+df_grouped_x$Expected <- Ei
+df_grouped_x <- setNames(df_grouped_x, c("Interval", "Observed Frequency", "Expected Frequency"))
+print(df_grouped_x,row.names = FALSE)
+
+```
+
+```{r}
+test_stat <- sum((Oi-Ei)^2/Ei)
+k <- 14
+p <- 2
+
+chi_square_test <- qchisq(0.95,14-2-1)
+```
+
+Then, we compute $\chi^2=\sum_{i=1}^k\frac{(O_i-E_i)^2}{E_i}\approx50.918$. After merging, k = 14 and p = 2 remains as previously. So, $\chi^2_{0.95}(14-2-1)=\chi^2_{0.95}(11)\approx19.675$. Since $\chi^2=50.918>\chi^2_{0.95}(14-2-1)=19.67$, we can reject the null hypothesis and claim that the oil returns are not normally distributed. 
+
+
+### c.
+The test hypotheses for the Kolmogorov-Smirnov test are set up as follows:
+$$H_0:X\sim N(\mu,\sigma^2) \hspace{1cm}H_1:X\not\sim N(\mu,\sigma^2)$$
+To test the distribution of the oil returns with a normal distribution, 2442 data points (the number of days of return data) were simulated from a normal distribution. The simulated data has the same mean and variance as the distribution of the oil returns. Using the Kolmogorov-Smirnov test in R, since the outputted $p-value=2.2e-16<\alpha$, the null hypothesis can be rejected. Hence, the data does not follow a normal distribution. 
+
+```{r}
+ks_test <- ks.test(x, "pnorm")
+```
+
